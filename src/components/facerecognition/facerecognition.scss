@@ -1,0 +1,22 @@
+#face-recognition {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+
+    .image-container {
+        position: relative;
+
+        .bounding-box {
+            position: absolute;
+            box-shadow: 0 0 0 3px hsl(47, 70%, 40%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        img {
+            box-shadow: 0 0 12px 4px rgba(95, 95, 95, 0.9);
+        }
+    }
+}

@@ -1,0 +1,46 @@
+#imagelinkform {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    div {
+        display: flex;
+        justify-content: center;
+        width: 70%;
+        padding: 3rem;
+        --s: 43px; /* control the size*/
+        --c1: hsl(260, 100%, 85%);
+        --c2: hsl(200, 100%, 80%);
+        --_g: #0000 83%,var(--c1) 85% 99%,#0000 101%;
+        background:
+            radial-gradient(27% 29% at right ,var(--_g)) calc(var(--s)/ 2) var(--s),
+            radial-gradient(27% 29% at left  ,var(--_g)) calc(var(--s)/-2) var(--s),
+            radial-gradient(29% 27% at top   ,var(--_g)) 0 calc(var(--s)/ 2),
+            radial-gradient(29% 27% at bottom,var(--_g)) 0 calc(var(--s)/-2)
+            var(--c2);
+        background-size: calc(2*var(--s)) calc(2*var(--s));
+        border-radius: 20px;
+
+        input {
+            width: 70%;
+            font-size: 1.2rem;
+            border: 0;
+            border-radius: 7px 0 0 7px;
+            padding: 0.5rem;
+
+            &:focus {
+                outline: none;
+                box-shadow: 0 0 12px 0 rgba(0, 0, 0, 0.5);
+            }
+        }
+        button {
+            width: 30%;
+            font-size: 1.2rem;
+            border: 0;
+            border-radius: 0 7px 7px 0;
+            border-left: 1px solid hsla(0, 0%, 50%, 0.2);
+            background: hsl(260, 100%, 85%);
+            box-shadow: 2px 0 12px 0 rgba(0, 0, 0, 0.5);
+        }
+    }
+}
