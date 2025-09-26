@@ -2,6 +2,7 @@ import React from 'react'
 import './facerecognition.scss'
 
 const FaceRecognition = ({ imageUrl, faces }) => {
+	console.log(faces)
 	return (
 		<div id='face-recognition'>
 			<div className='image-container'>
@@ -12,14 +13,17 @@ const FaceRecognition = ({ imageUrl, faces }) => {
 					width='500px'
 					height='auto'
 				/>
-				<div
-					className='bounding-box'
-					style={{
-						top: faces.topRow,
-						right: faces.rightCol,
-						bottom: faces.bottomRow,
-						left: faces.leftCol,
-					}}></div>
+				{faces.map((box, i) => (
+					<div
+						key={i}
+						className='bounding-box'
+						style={{
+							top: box.topRow,
+							right: box.rightCol,
+							bottom: box.bottomRow,
+							left: box.leftCol,
+						}}></div>
+				))}
 			</div>
 		</div>
 	)

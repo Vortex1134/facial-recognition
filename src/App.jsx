@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ParticlesBg from 'particles-bg'
 import Navigation from './components/navigation/Navigation'
 import Logo from './components/logo/Logo'
@@ -9,20 +9,31 @@ import Signin from './components/signin/Signin'
 import Register from './components/register/Register'
 import './styles/global/main.scss'
 
+const initialInput = ''
+const initialImageUrl = 'filler'
+const initialFaces = []
+const initialRoute = 'signin'
+const initialIsSignedIn = false
+const initialUser = {
+	id: '',
+	name: '',
+	email: '',
+	entries: 0,
+	joined: '',
+}
+
 const App = () => {
 	// State
-	const [input, setInput] = useState('')
-	const [imageUrl, setImageUrl] = useState('filler')
-	const [faces, setFaces] = useState({})
-	const [route, setRoute] = useState('signin')
-	const [isSignedIn, setIsSignedIn] = useState(false)
+	const [input, setInput] = useState(initialInput)
+	const [imageUrl, setImageUrl] = useState(initialImageUrl)
+	const [faces, setFaces] = useState(initialFaces)
+	const [route, setRoute] = useState(initialRoute)
+	const [isSignedIn, setIsSignedIn] = useState(initialIsSignedIn)
+	const [user, setUser] = useState(initialUser)
 
-	// Clarifai
-	const PAT = '191318de14fd470db5f9454d7648d5bc'
-	const USER_ID = 'clarifai'
-	const APP_ID = 'main'
-	const MODEL_ID = 'face-detection'
-	const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105'
+	useEffect(() => {
+		console.log(user)
+	}, [user])
 
 	// Events
 	const onInputChange = (event) => {
@@ -31,48 +42,35 @@ const App = () => {
 
 	const onButtonSubmit = () => {
 		setImageUrl(input)
-		const IMAGE_URL = input
 
-		const raw = JSON.stringify({
-			user_app_id: {
-				user_id: USER_ID,
-				app_id: APP_ID,
-			},
-			inputs: [
-				{
-					data: {
-						image: {
-							url: IMAGE_URL,
-						},
-					},
-				},
-			],
+		fetch('https://facial-recognition-api-1zl8.onrender.com/imageurl', {
+			method: 'post',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				input,
+			}),
 		})
-
-		const requestOptions = {
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				Authorization: 'Key ' + PAT,
-				'Content-Type': 'application/json',
-			},
-			body: raw,
-		}
-
-		fetch(
-			'https://corsproxy.io?' +
-				encodeURIComponent(
-					'https://api.clarifai.com/v2/models/' +
-						MODEL_ID +
-						'/versions/' +
-						MODEL_VERSION_ID +
-						'/outputs',
-				),
-			requestOptions,
-		)
 			.then((response) => response.json())
 			.then((result) => {
+				if (result) {
+					fetch(
+						'https://facial-recognition-api-1zl8.onrender.com/image',
+						{
+							method: 'put',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								id: user.id,
+							}),
+						},
+					)
+						.then((response) => response.json())
+						.then((count) => {
+							setUser({ ...user, entries: count })
+						})
+						.catch(console.log)
+				}
 				const regions = result.outputs?.[0]?.data?.regions || []
+				console.log('regions', regions)
 				displayFaceBox(calculateFaceLocation(regions))
 			})
 			.catch((error) => {
@@ -80,34 +78,46 @@ const App = () => {
 			})
 	}
 
-	const calculateFaceLocation = (data) => {
-		const clarifaiFace = data[0].region_info.bounding_box
+	const calculateFaceLocation = (regions) => {
 		const image = document.getElementById('input-image')
 		const width = Number(image.width)
 		const height = Number(image.height)
 
-		return {
-			leftCol: clarifaiFace.left_col * width,
-			topRow: clarifaiFace.top_row * height,
-			rightCol: width - clarifaiFace.right_col * width,
-			bottomRow: height - clarifaiFace.bottom_row * height,
-		}
+		return regions.map((region) => {
+			const clarifaiFace = region.region_info.bounding_box
+			return {
+				leftCol: clarifaiFace.left_col * width,
+				topRow: clarifaiFace.top_row * height,
+				rightCol: width - clarifaiFace.right_col * width,
+				bottomRow: height - clarifaiFace.bottom_row * height,
+			}
+		})
 	}
 
-	const displayFaceBox = (box) => {
-		console.log(box)
-		setFaces(box)
+	const displayFaceBox = (boxes) => {
+		setFaces(boxes)
 	}
 
 	const onRouteChange = (route) => {
 		if (route === 'signout') {
-			setIsSignedIn(false)
+			setFaces(initialFaces)
+			setImageUrl(initialImageUrl)
+			setInput(initialInput)
+			setUser(initialUser)
+			setRoute(initialRoute)
+			setIsSignedIn(initialIsSignedIn)
 		} else if (route === 'home') {
 			setIsSignedIn(true)
 		}
 		console.log(route)
 
 		setRoute(route)
+	}
+
+	const loadUser = (data) => {
+		setUser({
+			...data,
+		})
 	}
 
 	return (
@@ -123,7 +133,10 @@ const App = () => {
 			{route === 'home' ? (
 				<div>
 					<Logo />
-					<Rank />
+					<Rank
+						name={user.name}
+						entries={user.entries}
+					/>
 					<ImageLinkForm
 						onInputChange={onInputChange}
 						onButtonSubmit={onButtonSubmit}
@@ -134,9 +147,15 @@ const App = () => {
 					/>
 				</div>
 			) : route === 'signin' ? (
-				<Signin onRouteChange={onRouteChange} />
+				<Signin
+					onRouteChange={onRouteChange}
+					loadUser={loadUser}
+				/>
 			) : (
-				<Register onRouteChange={onRouteChange} />
+				<Register
+					onRouteChange={onRouteChange}
+					loadUser={loadUser}
+				/>
 			)}
 		</div>
 	)

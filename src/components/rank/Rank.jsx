@@ -1,15 +1,11 @@
 import React from 'react'
 import './rank.scss'
 
-const Rank = () => {
+const Rank = ({ name, entries }) => {
 	return (
 		<div id='rank'>
-			<div>
-                {`Vincent, your current rank is...`}
-            </div>
-            <div>
-                {`#5`}
-            </div>
+			<div>{`${name}, your current entry count is...`}</div>
+			<div>{entries}</div>
 		</div>
 	)
 }
